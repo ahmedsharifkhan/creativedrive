@@ -1,0 +1,66 @@
+[
+  {
+    "id": "img1",
+    "type": "image",
+    "name": "white-light-blue-grid-fathers-day.jpg",
+    "url": "assets/white-light-blue-grid-fathers-day.jpg",
+    "size": 256000,
+    "modified": "2026-01-27T00:28:00Z"
+  },
+  {
+    "id": "img2",
+    "type": "image",
+    "name": "design 2.png",
+    "url": "assets/design%202.png",
+    "size": 244000,
+    "modified": "2026-02-18T00:21:00Z"
+  },
+  {
+    "id": "img3",
+    "type": "image",
+    "name": "gemeni 2.png",
+    "url": "assets/gemeni%202.png",
+    "size": 1379000,
+    "modified": "2026-02-17T19:38:00Z"
+  },
+  {
+    "id": "img4",
+    "type": "image",
+    "name": "meta logo.png",
+    "url": "assets/meta%20logo.png",
+    "size": 35000,
+    "modified": "2026-02-16T22:15:00Z"
+  },
+  {
+    "id": "exe1",
+    "type": "other",
+    "name": "CapCut_7605872678431358992_installer.exe",
+    "url": "assets/CapCut_7605872678431358992_installer.exe",
+    "size": 2805000,
+    "modified": "2026-02-12T01:10:00Z"
+  },
+  {
+    "id": "img5",
+    "type": "image",
+    "name": "desing 12.jpg",
+    "url": "assets/desing%2012.jpg",
+    "size": 757000,
+    "modified": "2026-02-09T00:21:00Z"
+  },
+  {
+    "id": "pdf1",
+    "type": "pdf",
+    "name": "Ahmed Sharif Khan.pdf",
+    "url": "assets/Ahmed%20Sharif%20Khan.pdf",
+    "size": 653000,
+    "modified": "2026-01-30T11:21:00Z"
+  },
+  {
+    "id": "vid1",
+    "type": "video",
+    "name": "water book 4k 60fps.mp4",
+    "url": "assets/water%20book%204k%2060fps.mp4",
+    "size": 481362000,
+    "modified": "2025-07-25T17:56:00Z"
+  }
+]

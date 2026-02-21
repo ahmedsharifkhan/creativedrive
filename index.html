@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Drive UI Pro (Static)</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: "class" };
+  </script>
+
+  <!-- PDF.js (proper PDF preview) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.7.76/pdf.min.js"></script>
+
+  <style>
+    .glass { backdrop-filter: blur(10px); background: rgba(255,255,255,.72); }
+    .dark .glass { background: rgba(15,23,42,.6); }
+    .no-select { user-select: none; }
+  </style>
+</head>
+
+<body class="h-full bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100">
+  <!-- Topbar -->
+  <header class="sticky top-0 z-50 border-b border-slate-200/70 dark:border-slate-800 bg-white/80 dark:bg-slate-900/70 glass">
+    <div class="mx-auto max-w-[1400px] px-4 py-3 flex items-center gap-3">
+      <div class="flex items-center gap-2 min-w-[180px]">
+        <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-emerald-500"></div>
+        <div class="font-semibold">Drive UI Pro</div>
+      </div>
+
+      <div class="flex-1">
+        <div class="relative">
+          <input id="searchInput" type="text" placeholder="Search in Drive"
+            class="w-full rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2 pl-11 outline-none focus:ring-2 focus:ring-blue-200/60" />
+          <svg class="absolute left-4 top-2.5 h-5 w-5 text-slate-400" viewBox="0 0 24 24" fill="none">
+            <path d="M21 21l-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="darkToggle" class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium">
+          Dark
+        </button>
+        <button id="viewGridBtn" class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium">
+          Grid
+        </button>
+        <button id="viewListBtn" class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-medium">
+          List
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mx-auto max-w-[1400px] px-4 py-6 flex gap-6">
+    <!-- Sidebar -->
+    <aside class="hidden lg:block w-72 shrink-0">
+      <div class="sticky top-[76px] space-y-3">
+        <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3">
+          <div class="font-semibold mb-2">Quick folders</div>
+          <div id="quickFolders" class="space-y-1"></div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+          <div class="text-sm font-semibold mb-2">Filters</div>
+
+          <label class="text-xs text-slate-500 dark:text-slate-400">Type</label>
+          <select id="typeFilter" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
+            <option value="all">All</option>
+            <option value="folder">Folder</option>
+            <option value="image">Image</option>
+            <option value="video">Video</option>
+            <option value="pdf">PDF</option>
+            <option value="app">App (.exe)</option>
+            <option value="file">File</option>
+            <option value="other">Other</option>
+          </select>
+
+          <label class="mt-3 block text-xs text-slate-500 dark:text-slate-400">Sort</label>
+          <select id="sortBy" class="mt-1 w-full rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm">
+            <option value="name_asc">Name (A → Z)</option>
+            <option value="name_desc">Name (Z → A)</option>
+            <option value="modified_desc">Modified (newest)</option>
+            <option value="modified_asc">Modified (oldest)</option>
+          </select>
+
+          <div class="mt-4 text-xs text-slate-500 dark:text-slate-400">
+            GitHub Pages-only mode: ZIP bulk download is disabled.
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 min-w-0">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div class="min-w-0">
+          <div class="text-xs text-slate-500 dark:text-slate-400">Location</div>
+          <div id="breadcrumb" class="flex flex-wrap items-center gap-2 text-sm font-semibold"></div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <div class="text-sm text-slate-500 dark:text-slate-400" id="countLabel">—</div>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6">
+        <div class="animate-pulse space-y-3">
+          <div class="h-5 w-44 bg-slate-200 dark:bg-slate-800 rounded"></div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div class="h-28 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+            <div class="h-28 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+            <div class="h-28 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+            <div class="h-28 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+          </div>
+        </div>
+      </div>
+
+      <section id="content" class="hidden"></section>
+    </main>
+
+    <!-- Details panel -->
+    <aside class="hidden xl:block w-80 shrink-0">
+      <div class="sticky top-[76px]">
+        <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+          <div class="font-semibold mb-3">Details</div>
+          <div id="detailsPanel" class="text-sm text-slate-600 dark:text-slate-300">
+            Select a file to see details.
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Context menu -->
+  <div id="ctxMenu" class="hidden fixed z-[999] w-56 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg overflow-hidden">
+    <button data-action="preview" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm">Preview</button>
+    <button data-action="newtab" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm">Open in new tab</button>
+    <button data-action="download" class="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm">Download</button>
+  </div>
+
+  <!-- Preview Modal -->
+  <dialog id="previewModal" class="w-full max-w-5xl rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-0 shadow-xl">
+    <div class="border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <div class="font-semibold truncate" id="previewTitle">Preview</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400" id="previewMeta"></div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="openNewTabBtn" class="rounded-lg border border-slate-200 dark:border-slate-800 px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">Open in new tab</button>
+        <button id="downloadBtn" class="rounded-lg bg-blue-600 px-3 py-2 text-sm text-white hover:bg-blue-700">Download</button>
+        <button id="closePreviewBtn" class="rounded-lg border border-slate-200 dark:border-slate-800 px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-800">Close</button>
+      </div>
+    </div>
+
+    <div class="p-4">
+      <div id="previewBody" class="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-3 min-h-[520px]"></div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
