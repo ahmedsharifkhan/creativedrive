@@ -44,9 +44,9 @@ function fmtDate(iso) {
   if (!iso) return "—";
   return new Date(iso).toLocaleString();
 }
-function escapeHtml(str="") {
+function escapeHtml(str = "") {
   return str.replace(/[&<>"']/g, (m) => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"
   }[m]));
 }
 function icon(kind) {
@@ -93,10 +93,10 @@ function getFilters() {
 }
 function applySort(list, sortKey) {
   const copy = [...list];
-  if (sortKey === "name_asc") copy.sort((a,b)=>a.name.localeCompare(b.name));
-  if (sortKey === "name_desc") copy.sort((a,b)=>b.name.localeCompare(a.name));
-  if (sortKey === "modified_desc") copy.sort((a,b)=>new Date(b.modified||0)-new Date(a.modified||0));
-  if (sortKey === "modified_asc") copy.sort((a,b)=>new Date(a.modified||0)-new Date(b.modified||0));
+  if (sortKey === "name_asc") copy.sort((a, b) => a.name.localeCompare(b.name));
+  if (sortKey === "name_desc") copy.sort((a, b) => b.name.localeCompare(a.name));
+  if (sortKey === "modified_desc") copy.sort((a, b) => new Date(b.modified || 0) - new Date(a.modified || 0));
+  if (sortKey === "modified_asc") copy.sort((a, b) => new Date(a.modified || 0) - new Date(b.modified || 0));
   return copy;
 }
 function filteredChildren(folderNode) {
@@ -106,10 +106,20 @@ function filteredChildren(folderNode) {
   if (q) list = list.filter(x => (x.name || "").toLowerCase().includes(q));
   return applySort(list, s);
 }
-
 function setLoading(on) {
   loadingEl.classList.toggle("hidden", !on);
   contentEl.classList.toggle("hidden", on);
+}
+
+// -------- YouTube helpers --------
+function isYouTubeUrl(url = "") {
+  return /youtube\.com|youtu\.be/.test(url);
+}
+function toYouTubeEmbed(url = "") {
+  const m1 = url.match(/[?&]v=([^&]+)/);
+  const m2 = url.match(/youtu\.be\/([^?]+)/);
+  const id = (m1 && m1[1]) || (m2 && m2[1]) || "";
+  return id ? `https://www.youtube.com/embed/${id}` : "";
 }
 
 // -------- render --------
@@ -388,21 +398,18 @@ function openInNewTab(item) {
   if (!item.url) return;
   window.open(item.url, "_blank", "noopener,noreferrer");
 }
+
+// ✅ Download FIX: large files / GitHub pages = open new tab
 function downloadItem(item) {
   if (!item.url) return;
 
-  // ✅ .exe auto download OFF: confirm required
+  // ✅ .exe confirm
   if (item.kind === "app") {
     const ok = confirm("This is an installer/app file (.exe). Do you want to download it?");
     if (!ok) return;
   }
 
-  const a = document.createElement("a");
-  a.href = item.url;
-  a.download = "";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  window.open(item.url, "_blank", "noopener,noreferrer");
 }
 
 // -------- modal + PDF --------
@@ -430,12 +437,12 @@ async function renderPdf(url) {
 
   document.getElementById("pdfPrev").onclick = () => { if (pdfPageNum > 1) { pdfPageNum--; queuePdfRender(); } };
   document.getElementById("pdfNext").onclick = () => { if (pdfPageNum < pdfDoc.numPages) { pdfPageNum++; queuePdfRender(); } };
-  document.getElementById("pdfZoomIn").onclick  = () => { pdfScale = Math.min(3, pdfScale + 0.2); queuePdfRender(); };
+  document.getElementById("pdfZoomIn").onclick = () => { pdfScale = Math.min(3, pdfScale + 0.2); queuePdfRender(); };
   document.getElementById("pdfZoomOut").onclick = () => { pdfScale = Math.max(0.6, pdfScale - 0.2); queuePdfRender(); };
 
   await queuePdfRender(true);
 }
-async function queuePdfRender(immediate=false) {
+async function queuePdfRender(immediate = false) {
   if (pdfRendering && !immediate) return;
   pdfRendering = true;
 
@@ -494,6 +501,25 @@ async function openPreview(item) {
   }
 
   if (item.kind === "video") {
+    // ✅ YouTube embed preview
+    if (isYouTubeUrl(item.url)) {
+      const embed = toYouTubeEmbed(item.url);
+      previewBody.innerHTML = embed ? `
+        <iframe
+          class="w-full h-[520px] rounded-xl bg-black"
+          src="${embed}"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
+      ` : `
+        <div class="h-[520px] grid place-items-center text-center p-8">
+          <div class="text-2xl font-semibold">Invalid YouTube link</div>
+        </div>
+      `;
+      previewModal.showModal();
+      return;
+    }
+
+    // ✅ Normal mp4 preview
     previewBody.innerHTML = `
       <video controls class="w-full h-[520px] rounded-xl bg-black">
         <source src="${item.url}">
